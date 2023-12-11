@@ -1,3 +1,8 @@
+# CS4613 Artificial Intelligence
+# Professor: Edward K. Wong
+# Fall 2023
+# Project 2: Cryptarithmetic Problem
+# Authors: Cat Almuete, Rakeeb Hossain
 
 # Parse the input file and return a set of variables and a dictionary of domains
 def parse_input():
@@ -45,7 +50,6 @@ def parse_input():
     elif len(puzzle[-1]) > max_len:
         domains[f'C{max_len}'] = {1}
 
-
     return variables, assignment, domains, constraints
 
 
@@ -60,19 +64,30 @@ def is_complete(assignment):
 # remaining values heuristic and the degree heuristic
 def select_unassigned_variable(variables, assignment, domains, constraints):
     unassigned_vars = [var for var in variables if assignment[var] is None]
-    # # Orders the domain values of the variable in the assignment in increasing order
 
+# # Orders the domain values of the variable in the assignment in increasing order
+def order_domain_values(var, domains):
+    return sorted(list(domains[var])) 
 
-def order_domain_values(var, assignment, domains):
-    # # Checks if the value assignment is consistent by checking all constraints
-    return
-
+# # Checks if the value assignment is consistent by checking all constraints
 def is_consistent(var, value, assignment, constraints):
     # Check that no other variable has been assigned this value
     for variable, assigned_value in assignment.items():
         if variable != var and assigned_value == value:
             return False
-
+        
+    # Check that all constraints are satisfied
+    for constraint in constraints:
+        if var in constraint:
+            addend1 = value if var == constraint[0] else assignment.get(constraint[0], None)
+            addend2 = value if var == constraint[1] else assignment.get(constraint[1], None)
+            sumVal =  value if var == constraint[2] else assignment.get(constraint[2], None)
+            carry = value if var == constraint[3] else assignment.get(constraint[3], None)
+            if addend1 and addend2 and sumVal and carry:
+                if addend1 + addend2 != sumVal + (carry*10):
+                    return False
+    return True
+                
 
 def backtracking_search(variables, domains, assignment, constraints):
     return
