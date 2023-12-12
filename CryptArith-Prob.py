@@ -52,7 +52,6 @@ def parse_input():
 
     return variables, assignment, domains, constraints
 
-
 # Checks if the assignment is complete by checking if there are any None values
 def is_complete(assignment):
     for value in assignment.values():
@@ -65,11 +64,26 @@ def is_complete(assignment):
 def select_unassigned_variable(variables, assignment, domains, constraints):
     unassigned_vars = [var for var in variables if assignment[var] is None]
 
-# # Orders the domain values of the variable in the assignment in increasing order
+    # Minimum Remaining Values heuristic: Select variable with the fewest remaining values in its domain
+    unassigned_vars = sorted(unassigned_vars, key=lambda var: len(domains[var]))
+
+    # Degree heuristic: Among variables with equal remaining values, select the one involved in the most constraints
+    def degree_heuristic(var):
+        count = 0
+        for constraint in constraints:
+            if var in constraint:
+                count += 1
+        return count
+
+    unassigned_vars = sorted(unassigned_vars, key=degree_heuristic, reverse=True)
+
+    return unassigned_vars[0] if unassigned_vars else None
+
+# Orders the domain values of the variable in the assignment in increasing order
 def order_domain_values(var, domains):
     return sorted(list(domains[var])) 
 
-# # Checks if the value assignment is consistent by checking all constraints
+# Checks if the value assignment is consistent by checking all constraints
 def is_consistent(var, value, assignment, constraints):
     # Check that no other variable has been assigned this value
     for variable, assigned_value in assignment.items():
@@ -88,9 +102,32 @@ def is_consistent(var, value, assignment, constraints):
                     return False
     return True
                 
-
 def backtracking_search(variables, domains, assignment, constraints):
-    return
+    # Check if the assignment is complete
+    if is_complete(assignment):
+        return assignment  # Return the complete assignment
+
+    # Select an unassigned variable using heuristics
+    var = select_unassigned_variable(variables, assignment, domains, constraints)
+
+    # Order the domain values of the selected variable
+    ordered_domain = order_domain_values(var, domains)
+
+    for value in ordered_domain:
+        # Check if the value assignment is consistent
+        if is_consistent(var, value, assignment, constraints):
+            # Assign the value to the variable
+            assignment[var] = value
+
+            # Recursive call with the updated assignment
+            result = backtracking_search(variables, domains, assignment, constraints)
+            if result is not None:
+                return result  # Return the result if it's a valid assignment
+
+            # Unassign the variable if no valid assignment found
+            assignment[var] = None
+
+    return None  # If no solution found
 
 def main():
     variables, assignment, domains, constraints = parse_input()
@@ -98,5 +135,20 @@ def main():
     print(assignment)
     print(domains)
     print(constraints)
+    print(backtracking_search(variables, domains, assignment, constraints))
+
+    # Attempt to print out to Output1.txt
+    solution = backtracking_search(variables, domains, assignment, constraints)
+
+    if solution is not None:
+        # Create the output string in the specified format
+        output_string = ''.join(str(solution[letter]) for letter in variables if letter.isalpha())
+
+        # Write the solution to the output file
+        with open("Output1.txt", "w") as output_file:
+            output_file.write(output_string)
+        print("Solution written to Output1.txt")
+    else:
+        print("No solution found.")
 
 main()
