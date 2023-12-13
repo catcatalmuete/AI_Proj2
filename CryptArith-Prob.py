@@ -4,10 +4,10 @@
 # Project 2: Cryptarithmetic Problem
 # Authors: Cat Almuete, Rakeeb Hossain
 
-input_file = "Input2.txt"
-output_file = "Output2.txt"
+input_file = "Input1.txt"
+output_file = "Output1.txt"
 
-# Parse the input file and return a set of variables and a dictionary of domains
+# Parse the input file and return variables and domains
 def parse_input():
     with open(input_file, "r") as file:
         puzzle = file.read().splitlines()
@@ -32,7 +32,7 @@ def parse_input():
 
     reversed_puzzle = [word[::-1] for word in puzzle]
 
-    # Add carry variables and constraints to the CSP
+    # Add carry variables and constraints
     max_len = len(max(reversed_puzzle[0:2], key=len))
     for i in range(max_len):
         carry1 = f'C{i}'
@@ -48,28 +48,28 @@ def parse_input():
     assignment = {letter: None for letter in variables}
     assignment['C0'] = 0
 
-    # If the length of the sum is the same as the length of the longest addend, the carry from the last column must be 0
+    # Carry variables can only be 0 or 1
+    # If the length of the sum is the same as the length of the longest addend, carry = 0
     if len(puzzle[-1]) == max_len:
         domains[f'C{max_len}'] = {0}
-    # If the length of the sum is longer than the length of the longest addend, the carry from the last column must be 1
+    # If the length of the sum is longer than the length of the longest addend, carry = 1
     elif len(puzzle[-1]) > max_len:
         domains[f'C{max_len}'] = {1}
 
     return variables, assignment, domains, constraints
 
-# Checks if the assignment is complete by checking if there are any None values
+# Checks if there are any None values to confirm completion
 def is_complete(assignment):
     for value in assignment.values():
         if value is None:
             return False
     return True
 
-# Selects the next unassigned variable using the minimum
-# remaining values heuristic and the degree heuristic
+# Selects the next unassigned variable using the minimum remaining values and the degree heuristic
 def select_unassigned_variable(variables, assignment, domains, constraints):
     unassigned_vars = [var for var in variables if assignment[var] is None]
 
-    # Degree heuristic: Among variables with equal remaining values, select the one involved in the most constraints
+    # Degree: When all variables have equal remaining values, select the one in the most constraints
     def degree_heuristic(var):
         count = 0
         for constraint in constraints:
@@ -79,7 +79,7 @@ def select_unassigned_variable(variables, assignment, domains, constraints):
 
     unassigned_vars = sorted(unassigned_vars, key=degree_heuristic, reverse=True)
 
-    # Minimum Remaining Values heuristic: Select variable with the fewest remaining values in its domain
+    # MRV: Fewest remaining values in its domain
     unassigned_vars = sorted(unassigned_vars, key=lambda var: len(domains[var]))
 
     if (len(unassigned_vars)==len(variables)):
@@ -91,7 +91,7 @@ def select_unassigned_variable(variables, assignment, domains, constraints):
 def order_domain_values(var, domains):
     return sorted(list(domains[var])) 
 
-# Checks if the value assignment is consistent by checking all constraints
+# Check consistency by checking all constraints
 def is_consistent(var, value, assignment, constraints):
     # Check that no other variable has been assigned this value
     for variable, assigned_value in assignment.items():
@@ -116,16 +116,15 @@ def backtracking_search(variables, domains, assignment, constraints):
     if is_complete(assignment):
         return assignment  # Return the complete assignment
 
-    # Select an unassigned variable using heuristics
+    # Select an unassigned variable
     var = select_unassigned_variable(variables, assignment, domains, constraints)
 
-    # Order the domain values of the selected variable
+    # Order the domain values
     ordered_domain = order_domain_values(var, domains)
 
     for value in ordered_domain:
-        # Check if the value assignment is consistent
+        # Check consistency
         if is_consistent(var, value, assignment, constraints):
-            # Assign the value to the variable
             assignment[var] = value
 
             # Recursive call with the updated assignment
@@ -133,10 +132,10 @@ def backtracking_search(variables, domains, assignment, constraints):
             if result is not None:
                 return result  # Return the result if it's a valid assignment
 
-            # Unassign the variable if no valid assignment found
+            # None if no valid assignment found
             assignment[var] = None
 
-    return None  # If no solution found
+    return None  # No solution
 
 def main():
     variables, assignment, domains, constraints = parse_input()
@@ -145,11 +144,11 @@ def main():
     print(domains)
     print(constraints)
 
-    # Attempt to print out to Output1.txt
+    # Write solution to Output.txt
     solution = backtracking_search(variables, domains, assignment, constraints)
 
     if solution is not None:
-        # Create the output string in the specified format
+        # Create the output string
         output_string = ""
         with open(input_file, "r") as file:
             puzzle = file.read().splitlines()
@@ -158,10 +157,10 @@ def main():
                 output_string += str(assignment[letter])
             output_string += "\n"
 
-        # Write the solution to the output file
         with open(output_file, "w") as file:
             file.write(output_string)
-        print("Solution written to Output1.txt")
+        print("Solution written to Output.txt")
+        
     else:
         print("No solution found.")
 
